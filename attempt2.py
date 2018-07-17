@@ -10,6 +10,8 @@ INPuT = "steinmetz_paProb.txt"
 
 suffix = "paProb"
 
+detail = ""
+
 control = "wt"
 
 dg = pd.read_csv(INPuT, delimiter = "\t") #creates a pandas table from the text file
@@ -45,51 +47,34 @@ for s in range(0, len(genetics)):
 #type - which worked, based on the print(bigarray) and np.mean(bigarray) working). 
 #The issue was that the big array will not save into a .data file, even though
 #im using essentially the same code from the previous loop.
-for listitem in Genetics :
-  with open(listitem+'.data', 'rb') as fp:
-    listitem = []
-    listitem.append(pickle.load(fp))
-    for s in range(0, len(listitem)):
-      array = dg[listitem[0][s]].tolist()
+
+for i in range(0, len(Genetics)) :
+  with open(Genetics[i]+'.data', 'rb') as fp:
+    Genetics[i] = []
+    Genetics[i].append(pickle.load(fp))
+    listitem = Genetics[i]
+    for s in range(0, len(Genetics[i])):
+      array = dg[listitem[0][s]+detail].tolist()
       bigarray = np.hstack((array))
       del array[:]
-    print(bigarray)
-    print(np.mean(bigarray))
-    with open(listitem+'_combined.data', 'wb') as fp:
+    print(genetics[i], "mean - ", np.mean(bigarray))
+    with open(genetics[i]+'_combined.data', 'wb') as fp:
       pickle.dump(bigarray, fp)  
 
 #meant to assign a variable to the control array, once that works
-with open(control+'combined.data', 'rb') as fp:
+with open(control+'_combined.data', 'rb') as fp:
   control_array = pickle.load(fp)
 
-print(control_array)
-
-
-#print(np.mean(control_array))
-
-#with open('cft2_1_combined.data', 'rb') as fp:
-  #cft2_1_array = pickle.load(fp)
-
-#print(cft2_1_array)
-
-#print(np.mean(cft2_1_array))
-
-#thing = scipy.stats.ttest_ind(control_array, cft2_1_array, equal_var = False)
-
-#print(thing)
-
-
-#the above hashtagged sutff was to check iff the bigarrays were saving as a .data file
-
-
 #this is the t-test function, meant to compare each of the mutations to the wildtype. doesnt work yet because of the issues storing the bigarray in the previous loop.
-for listitem in Genetics :
-   if listitem != control:
-     with open(listitem+'_combined.data', 'rb') as fp:
-       listitem = []
-       listitem.append(pickle.load(fp))
-       answer = scipy.stats.ttest_ind(control_array, listitem[0], equal_var = False)
-       with open('T-Test_'+suffix+'.txt', 'a+') as f:
-           print(str(listitem), "vs WT unequal variance t-test result        ", answer, file=f)
+for a in range(0, len(Genetics)) :
+   if Genetics[a] == control:
+     stop
+   else:
+     with open(genetics[a]+'_combined.data', 'rb') as fp:
+       Genetics[a] = []
+       Genetics[a].append(pickle.load(fp))
+       answer = scipy.stats.ttest_ind(control_array, Genetics[a][0], equal_var = False)
+       with open('T-Test_'+suffix+detail+'.txt', 'a+') as f:
+           print(genetics[a], "vs WT unequal variance t-test result        ", answer, file=f)
 
 
