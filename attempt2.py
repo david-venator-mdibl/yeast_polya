@@ -16,6 +16,8 @@ control = "wt"
 
 dg = pd.read_csv(INPuT, delimiter = "\t") #creates a pandas table from the text file
 
+gene_array = dg["#gene"].tolist()
+
 inpUt = "Steinmetz_design.txt"
 
 #creates a pandas file from design file
@@ -53,13 +55,19 @@ for i in range(0, len(Genetics)) :
     Genetics[i] = []
     Genetics[i].append(pickle.load(fp))
     listitem = Genetics[i]
-    for s in range(0, len(Genetics[i])):
+    print(Genetics[i])
+    for s in range(0, len(listitem[0])):
       array = dg[listitem[0][s]+detail].tolist()
+      with open(genetics[i]+listitem[0][s]+'_single_array.data', 'wb') as fp:
+        pickle.dump(array, fp)
+      #print(genetics[i], listitem[0][s], array[1])
+      print(np.mean(array))
       bigarray = np.hstack((array))
-      del array[:]
+      #del array[:]
     print(genetics[i], "mean - ", np.mean(bigarray))
     with open(genetics[i]+'_combined.data', 'wb') as fp:
-      pickle.dump(bigarray, fp)  
+      pickle.dump(bigarray, fp)  				
+
 
 #meant to assign a variable to the control array, once that works
 with open(control+'_combined.data', 'rb') as fp:
