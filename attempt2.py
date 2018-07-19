@@ -24,6 +24,9 @@ extra_array = dg["position"].tolist()    #print any added information, such as p
 genetic_array = df["genetics"].tolist()  #the differentiator, such as genetics, as it appears as a column title in the design file
 sample_array = df["sample"].tolist()
 
+with open("ggggggg.txt", 'w') as fdd:
+  print(gene_array, file=fdd)
+
 sample_names = []
 t_test_array = []
 
@@ -82,32 +85,54 @@ for a in range(0, len(Genetics)) :
        with open('T-Test_'+suffix+detail+'.txt', 'a+') as f:
            print(genetics[a], "vs WT unequal variance t-test result        ", answer, file=f)
 
-for n in range(0, len(gene_array)) : 
-  t_test_array = []
-  control_array = []
-  for i in range(0, len(Genetics)) :
-    with open(Genetics[i]+'.data', 'rb') as fp5:   #this line is broken
-      h = []
-      h.append(pickle.load(fp5))
-      listitem = h
-      if genetics[i] == control:
-        control_genetic_array = []
-        for s in range(0, len(listitem[0])):
-          with open(genetics[i]+listitem[0][s]+'_single_array.data', 'rb') as fp1:
-            Control = pickle.load(fp1)
-            control_genetic_array.append(Control[n])
-        control_array.append(control_genetic_array)
-      else:
-        gene_genetic_array = []
-        for s in range(0, len(listitem[0])):
-          with open(genetics[i]+listitem[0][s]+'_single_array.data', 'rb') as fp1:
-            array = pickle.load(fp1)
-            gene_genetic_array.append(array[n])
-        t_test_array.append(gene_genetic_array)
-  for a in range(0, len(t_test_array)) :
-     genetics.remove(control)
-     answer = scipy.stats.ttest_ind(control_array[0], t_test_array[a], equal_var = False)
-     with open('Gene_based_T-Test_'+suffix+detail+'.txt', 'a+') as f:
-        print(gene_array[n], extra_array[n], genetics[a], "vs wt unequal variance t-test result        ", answer, file=f)  
-     genetics.append(control)
+with open('Gene_based_T-Test_'+suffix+detail+'.txt', 'a+') as f:
+  print("Gene", "position", "name", "p_value", file = f) 
+
+#filter out low all values
+
+all_array = dg["all"].tolist()
+
+for n in range(0, len(gene_array)) :
+  if (all_array[n] < 0.1) :
+    continue
+  else:
+    print(extra_array[n])     
+    t_test_array = []
+    control_array = []
+    for i in range(0, len(Genetics)) :
+      with open(Genetics[i]+'.data', 'rb') as fp5:   #this line is broken
+        h = []
+        h.append(pickle.load(fp5))
+        listitem = h
+        if genetics[i] == control:
+          control_genetic_array = []
+          for s in range(0, len(listitem[0])):
+            with open(genetics[i]+listitem[0][s]+'_single_array.data', 'rb') as fp1:
+              Control = pickle.load(fp1)
+              control_genetic_array.append(Control[n])
+          control_array.append(control_genetic_array)
+        else:
+          gene_genetic_array = []
+          for s in range(0, len(listitem[0])):
+            with open(genetics[i]+listitem[0][s]+'_single_array.data', 'rb') as fp1:
+              array = pickle.load(fp1)
+              gene_genetic_array.append(array[n])
+          t_test_array.append(gene_genetic_array)
+    for a in range(0, len(t_test_array)) :
+       genetics.remove(control)
+       answer = scipy.stats.ttest_ind(control_array[0], t_test_array[a], equal_var = False)
+       with open('Gene_based_T-Test_'+suffix+detail+'.txt', 'a+') as f:
+         print(gene_array[n], extra_array[n], genetics[a], answer[1], file=f)  
+       genetics.append(control)
+
+dv = pd.read_csv('Gene_based_T-Test_'+suffix+detail+'.txt', delimiter = " ") #creates a pandas table from the text file for table
+
+with open('JustInCase.txt', 'w') as f:
+  print(dv, file=f)
+
+signif = dv.query('p_value < 0.05')
+
+with open('pandas_pvalues.txt', 'w') as f:
+  print(signif, file=f)
+
 
