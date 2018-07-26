@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#author: david venator
+
 import numpy as np
 import pandas as pd
 import scipy
@@ -8,22 +10,27 @@ import statsmodels.api as sm
 
 #inputs
 
-table = "pcf11_paGene.txt"
-design = "New_Pcf11_DRS_design.txt"
-suffix = "pcf11_paGene" #names files how you want
-detail = "_AvgL3pUTR"  #if name in design file differs from column titles in table, write the addendem here
-columns_want = ["rgenetics", "media"]
-tidbit = "rgenetics_"
+table = "pcf11_paGene.txt"                   #input data
+design = "New_Pcf11_DRS_design.txt"          #design file    
+detail = "_AvgL3pUTR"                        #if name in design file differs from column titles in table, write the addendem here
+columns_want = ["rgenetics", "media"]        #independant variables of the linear regression
+tidbit = "rgenetics_"                        #names files, should be one of the independant variables(whichever differentiates)
+
+#makes pandas files out of the input file and design file
 
 db = pd.read_csv(table, delimiter = "\t") #creates a pandas table from the text file for table
 df = pd.read_csv(design, delimiter = "\t") #creates a pandas table from the text tile for design
 
+#creates arrays for relevant parts of the design file - genetic_array and batch_array are the two variables, and must contain the same thing as column_want
+
 sample_array = df["sample"].tolist()
-genetic_array = df["rgenetics"].tolist()
+genetic_array = df["rgenetics"].tolist() 
 batch_array = df["media"].tolist()
 
 Genetics = []
 Batch = []
+
+#finds, and inserts into an array, each unique thing from the independant variable columns of the design file
 
 for n in range(len(sample_array)) :
   if genetic_array[n] not in Genetics :
@@ -36,16 +43,24 @@ print(Batch)
 
 column_titles = list(df.columns.values)
 
+#filters out rows that contain zeros
+
 dg = db.query('UTR3count > 1')
+
+#makes arrays from the table
 
 gene_array = dg["#gene"].tolist()
 UTR_array = dg["UTR3count"].tolist()
+
+#removes all columns that arent independant variables from the design file
 
 for n in range(0, len(column_titles)) :
   if column_titles[n] not in columns_want :
     df.drop([column_titles[n]], axis=1, inplace=True)
   else :
     continue
+
+#allows you to test alot of things
 
 du = pd.get_dummies(df)
 
@@ -57,8 +72,12 @@ print(du)
 
 print(column_titles)
   
+#makes column titles for the non independant variable qualities of the regression
+
 with open(tidbit+"OutPutTable.txt", "a+") as f:
   print("#gene", "3UTRcount", "rsquared", "rsquared_adj", "fvalue", "f_pvalue", file=f)
+
+#loops through to make columns for each indepdant variable quality
 
 column_titles.insert(0, "const")
 with open(tidbit+"OutPutTable2.txt", "a+") as f:
@@ -68,6 +87,8 @@ with open(tidbit+"OutPutTable2.txt", "a+") as f:
     print(column_titles[k]+"_p_value", end =" ", file=f) 
   print("", file=f)
 column_titles.remove("const")
+
+#this puts all the data into the columns.
 
 for n in range(0, len(gene_array)) :
   arrayy = []
@@ -98,6 +119,8 @@ for n in range(0, len(gene_array)) :
       print(model.pvalues[i], end =" ", file=f)
     print("", file=f)
   column_titles.remove("const")
+
+#makes pandas files out of the two outputs(regression results and independant variable results) and concats them together
 
 dn = pd.read_csv(tidbit+"OutPutTable2.txt", sep = " ")
   
